@@ -5,90 +5,71 @@
 #
 ####################
 
+import argparse
+import random
+import threading
+import time
+
 import requests
-import cloudscraper
 from tqdm import tqdm
-import itertools
 
-# Prompt the user to enter the target URL
-url = input("Enter the target URL: ")
 
-# Prompt the user to enter the HTTP method to use
-http_method = input("Enter the HTTP method (GET or POST): ")
+def test_site(url, http_method, num_requests, proxy_list, headers):
+    """Test the target site."""
+    for i in range(num_requests):
+        proxy = {"http": "socks5://" + random.choice(proxy_list)}
+        try:
+            response = requests.request(http_method, url, proxies=proxy, headers=headers, timeout=5)
+            status_code = response.status_code
+        except Exception as e:
+            status_code = "Error: " + str(e)
+        print(f"Request {i + 1}/{num_requests} (Proxy: {proxy['http']}, Status: {status_code})")
+        time.sleep(0.5)
 
-# Prompt the user to enter the number of requests to make
-num_requests = int(input("Enter the number of requests to make: "))
 
-# Prompt the user to enter a file path that contains the list of proxies (optional)
-proxy_file = input("Enter the file path that contains the list of proxies to use (leave blank for no proxies): ")
-if proxy_file:
-    with open(proxy_file, "r") as f:
-        proxy_list = [line.strip() for line in f if line.strip()]
-else:
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("url", help="URL to test")
+    parser.add_argument("http_method", help="HTTP method to use (GET or POST)", choices=["GET", "POST"])
+    parser.add_argument("num_requests", help="Number of requests to send", type=int)
+    parser.add_argument("--proxy_file", help="Path to a file containing a list of proxies (one per line)")
+    parser.add_argument("--headers_file", help="Path to a file containing custom headers (one per line)")
+    args = parser.parse_args()
+
+    # Load proxies
     proxy_list = []
-
-# Use the proxies in a round-robin fashion
-proxy_cycle = itertools.cycle(proxy_list)
-
-# Prompt the user to enter whether the website is behind Cloudflare (optional)
-use_cloudflare = input("Is the website behind Cloudflare? (Y/N): ")
-if use_cloudflare.upper() == "Y":
-    scraper = cloudscraper.create_scraper()
-    use_cloudscraper = True
-else:
-    session = requests.Session()
-    use_cloudscraper = False
-
-# Prompt the user to enter the log file name (optional)
-use_log = input("Do you want to write the output to a log file? (Y/N): ")
-if use_log.upper() == "Y":
-    log_filename = input("Enter the log file name: ")
-    log_file = open(log_filename, "w")
-else:
-    log_file = None
-
-# Send a request `num_requests` times using the specified HTTP method and proxy (if any)
-for i in tqdm(range(num_requests), desc="Sending requests", unit="req"):
-    if use_cloudscraper:
-        if proxy_list:
-            proxy = next(proxy_cycle)
-            proxies = {
-                "http": f"http://{proxy}",
-                "https": f"https://{proxy}",
-            }
-            response = scraper.request(http_method, url, proxies=proxies)
-        else:
-            response = scraper.request(http_method, url)
+    if args.proxy_file:
+        with open(args.proxy_file) as f:
+            for line in f:
+                proxy = line.strip()
+                if ":" not in proxy:
+                    print(f"Invalid proxy format: {proxy}. Skipping...")
+                    continue
+                proxy_list.append(proxy)
     else:
-        if proxy_list:
-            proxy = next(proxy_cycle)
-            proxies = {
-                "http": f"socks5://{proxy}",
-                "https": f"socks5://{proxy}",
-            }
-            session.proxies = proxies
-            with session:
-                if http_method.upper() == "GET":
-                    response = session.get(url)
-                elif http_method.upper() == "POST":
-                    response = session.post(url)
-                else:
-                    print("Invalid HTTP method. Please enter GET or POST.")
-                    break
-        else:
-            if http_method.upper() == "GET":
-                response = requests.get(url)
-            elif http_method.upper() == "POST":
-                response = requests.post(url)
-            else:
-                print("Invalid HTTP method. Please enter GET or POST.")
-                break
-    log_message = f"Request {i+1}: {response.status_code}\n"
-    if log_file:
-        log_file.write(log_message)
-    tqdm.write(log_message)
+        print("No proxy file specified. Using local IP address...")
+        proxy_list.append("127.0.0.1:9050")
 
-# Close the log file (if any)
-if log_file:
-    log_file.close()
-    print(f"Log file written to {log_filename}")
+    # Load headers
+    headers = {}
+    if args.headers_file:
+        with open(args.headers_file) as f:
+            for line in f:
+                key, value = line.strip().split(":")
+                headers[key] = value
+    else:
+        print("No headers file specified. Using default headers...")
+
+    # Send multiple requests to the website
+    print(f"Sending {args.num_requests} {args.http_method} requests to {args.url}...")
+    with tqdm(total=args.num_requests) as pbar:
+        for i in range(args.num_requests):
+            thread = threading.Thread(target=test_site, args=(args.url, args.http_method, 1, proxy_list, headers))
+            thread.start()
+            thread.join()
+            pbar.update(1)
+
+
+if __name__ == "__main__":
+    main()
