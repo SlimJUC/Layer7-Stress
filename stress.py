@@ -1,3 +1,10 @@
+####################
+#
+#   By: Slim Jay
+#
+#
+####################
+
 import requests
 import pyproxy
 
