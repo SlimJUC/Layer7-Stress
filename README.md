@@ -12,21 +12,22 @@ This script is a Python program that can be used to stress test a website by sen
 
 This script requires Python 3 and the `requests` and `pyproxy` libraries. You can install these libraries using `pip`:
 
-```bash```
+```
 pip install requests pyproxy
-
+```
 
 ## Usage
 Create a file called proxy_list.txt and add the list of SOCKS5 proxies that you want to use, one per line. For example:
 
-```bash```
+```
 127.0.0.1
 192.168.0.1
-
+```
 Run the script using the following command:
 
-```bash```
-python stress_test.py
+```
+python stress.py
+```
 
 Follow the prompts to enter the target URL, the HTTP method to use (GET or POST), the number of requests to make, and whether to use a SOCKS5 proxy or write the output to a log file.
 
