@@ -8,14 +8,13 @@
 
 This script is a Python program that can be used to stress test a website by sending a large number of requests using either the GET or POST method. The script can optionally use one or more SOCKS5 proxies to route the requests, and can write the output to a log file.
 
-This script also is capable of bypassing cloudflare protection.
 
 ## Prerequisites
 
-This script requires Python 3 and the `requests` and `pyproxy` libraries. You can install these libraries using `pip`:
+This script requires Python 3 and the `requests` and `tqdm` libraries. You can install these libraries using `pip`:
 
 ```
-pip install requests pyproxy tqdm
+pip3 install requests tqdm
 ```
 
 ## Usage
