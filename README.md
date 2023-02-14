@@ -13,15 +13,16 @@ This script is a Python program that can be used to stress test a website by sen
 This script requires Python 3 and the `requests` and `pyproxy` libraries. You can install these libraries using `pip`:
 
 ```
-pip install requests pyproxy
+pip install requests pyproxy tqdm
 ```
 
 ## Usage
 Create a file called proxy_list.txt and add the list of SOCKS5 proxies that you want to use, one per line. For example:
 
 ```
-127.0.0.1
-192.168.0.1
+127.0.0.1:1080
+192.168.0.1:1080
+
 ```
 Run the script using the following command:
 
