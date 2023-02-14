@@ -40,6 +40,3 @@ The script will send the requests and print the response status code to the cons
 
 ## License
 This script is licensed under the MIT License. See LICENSE for more information.
-
-
-You can copy and paste this code into your `README.md` file on Github and then push it to your repository. The resulting file will be formatted with a title, table of contents, and sections, with the code blocks formatted in a way that is easy to read.
